@@ -1,2 +1,3 @@
-# handless-reader-extension
-Extension I was asked to build
+# simple-autoscroll
+
+An extension that adds the ability to automatically scroll through long pages.

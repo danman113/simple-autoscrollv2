@@ -8,7 +8,7 @@ export default defineConfig({
   base: './',
   build: {
     outDir: 'scripts/',
-    manifest: true,
+    manifest: false,
     rollupOptions: {
       input: [resolve(__dirname, 'src/content.ts'), resolve(__dirname, 'index.html')],
       output: {
