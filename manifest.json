@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+	"author":"Daniel Berezin",
+	"name": "Simple Autoscroll",
+	"short_name": "s-autoscroll",
+	"description": "An extension that adds the ability to automatically scroll through long pages.",
+  "version": "2.0",
+  "action": {
+    "default_icon": {
+      "32": "images/icon.png"
+    },
+    "default_title": "Simple Autoscroll",
+    "default_popup": "scripts/index.html"
+  },
+  "icons": {
+    "128": "images/icon.png"
+  },
+  "content_scripts": [
+    {
+      "js": [
+        "scripts/content.js"
+      ],
+      "run_at": "document_end",
+      "matches": [
+        "*://*/*"
+      ]
+    }
+  ],
+  "permissions": [
+    "storage"
+  ]
+}

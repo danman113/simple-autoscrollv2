@@ -1,2 +1,2 @@
-# simple-autoscrollv2
-Manifest V3 version of autoscroll
+# handless-reader-extension
+Extension I was asked to build
