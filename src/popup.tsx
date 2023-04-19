@@ -130,7 +130,17 @@ const FormHandler = () => {
       finishedSyncing()
     }
   }
+  
+  const stop = () => {
+    if (globalThis.chrome?.tabs) {
+      chrome.tabs.query({ active: true, currentWindow: true }, ([firstTab]) => {
+        if (firstTab && firstTab.id)
+          chrome.tabs.sendMessage(firstTab.id, { stop: true } as Message)
+      })
+    }
+  }
   useEffect(() => {
+    stop()
     fetchSyncedSettings().catch(() => {
       console.error('Error syncing')
     })

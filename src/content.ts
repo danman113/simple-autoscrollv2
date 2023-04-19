@@ -12,12 +12,9 @@ const main = async () => {
     let scrollPixels: number | null = null
     chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
       if (message) {
-        const { scrollDuration: SD, scrollPixels: SP, loop, ping } = message as Message
-        if (ping) {
-          sendResponse({
-            scrollDuration,
-            scrollPixels,
-          } as Message)
+        const { scrollDuration: SD, scrollPixels: SP, loop, stop } = message as Message
+        if (stop) {
+          clearInterval(intCB)
         } else {
           scrollDuration = SD
           scrollPixels = SP
