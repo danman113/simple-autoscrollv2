@@ -116,18 +116,24 @@ const FormHandler = () => {
   }
   const fetchSyncedSettings = async () => {
     if (globalThis.chrome?.storage) {
-      startSyncing()
-      const { scrollDuration, scrollPixels, loop } = ((await chrome.storage.sync.get([settingsKey])) || {
-        [settingsKey]: {},
-      })?.[settingsKey] as Settings
-      console.log('Got new settings from sync', scrollDuration, scrollPixels)
-      if (scrollDuration && scrollPixels) {
-        console.log('Setting defaults')
-        setScrollDuration(scrollDuration)
-        setScrollPixels(scrollPixels)
-        setLoop(Boolean(loop))
+      try {
+        startSyncing()
+        const { scrollDuration, scrollPixels, loop } = ((await chrome.storage.sync.get([settingsKey])) || {
+          [settingsKey]: {},
+        })?.[settingsKey] as Settings
+        console.log('Got new settings from sync', scrollDuration, scrollPixels)
+        if (scrollDuration && scrollPixels) {
+          console.log('Setting defaults')
+          setScrollDuration(scrollDuration)
+          setScrollPixels(scrollPixels)
+          setLoop(Boolean(loop))
+        }
+      } catch(e) {
+        console.error(e)
+      } finally {
+        finishedSyncing()
       }
-      finishedSyncing()
+
     }
   }
   
