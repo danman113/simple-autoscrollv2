@@ -4,7 +4,7 @@
 	"name": "Simple Autoscroll",
 	"short_name": "s-autoscroll",
 	"description": "An extension that adds the ability to automatically scroll through long pages.",
-  "version": "2.01",
+  "version": "2.2",
   "action": {
     "default_icon": {
       "32": "images/icon.png"
@@ -22,7 +22,7 @@
       ],
       "run_at": "document_end",
       "matches": [
-        "*://*/*"
+        "<all_urls>"
       ]
     }
   ],

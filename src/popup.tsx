@@ -1,10 +1,52 @@
 import './popup.css'
-import React, { useEffect, useState } from 'react'
+import React, { ReactNode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Settings, Message } from './types'
 
 const container = document.getElementById('app')
 const root = createRoot(container!)
+
+const ErrorMessages = {
+  CANNOT_CONNECT_TO_ACTIVE_TAB:
+    'Unable to connect to the active tab. If this is a non-chrome tab, refreshing the tab might resolve the issue.',
+  CANNOT_QUERY_CURRENT_TAB:
+    'Unable to query the active tab. Please ensure that the window is active and try again',
+} as const
+
+const TransientMessage = ({
+  children,
+  duration,
+  value,
+  delay = 0,
+  done,
+  ...rest
+}: {
+  children: ReactNode
+  duration: number
+  delay?: number
+  done?: () => void
+  value: any
+  [key: string]: unknown
+}) => {
+  const [opacity, setOpacity] = useState(1)
+  const [visible, setVisibility] = useState(true)
+  useEffect(() => {
+    setOpacity(1)
+    setVisibility(true)
+    setTimeout(() => {
+      setOpacity(0)
+      setTimeout(() => {
+        setVisibility(false)
+        if (done) done()
+      }, duration)
+    }, delay)
+  }, [value])
+  return visible ? (
+    <span style={{ opacity }} {...rest}>
+      {children}
+    </span>
+  ) : null
+}
 
 const Form = ({
   ScrollSpeed,
@@ -57,19 +99,18 @@ const Form = ({
       <input
         id='scroll'
         type='number'
-        min='1'
+        min='-5000'
         max='5000'
-        value={scrollPixels}
+        value={String(scrollPixels)}
         onChange={(e) => setScrollPixels(Number(e.target.value))}
       />{' '}
       pixels every <br />
       <input
         id='seconds'
         type='number'
-        step='25'
-        min='0'
+        min='1'
         max='600000'
-        value={ScrollSpeed}
+        value={String(ScrollSpeed)}
         onChange={(e) => setScrollSpeed(Number(e.target.value))}
       />{' '}
       miliseconds
@@ -97,6 +138,7 @@ const defaultLoopState = false
 const settingsKey = 'defaultSettings'
 
 const FormHandler = () => {
+  const [error, setError] = useState('')
   const [scrollDuration, setScrollDuration] = useState(defaultScrollRate)
   const [scrollPixels, setScrollPixels] = useState(defaultScrollPixels)
   const [loop, setLoop] = useState(defaultLoopState)
@@ -118,9 +160,9 @@ const FormHandler = () => {
     if (globalThis.chrome?.storage) {
       try {
         startSyncing()
-        const { scrollDuration, scrollPixels, loop } = ((await chrome.storage.sync.get([settingsKey])) || {
-          [settingsKey]: {},
-        })?.[settingsKey] as Settings
+        const settings = (((await chrome.storage.sync.get([settingsKey])) || {})?.[settingsKey] ||
+          {}) as Settings
+        const { scrollDuration, scrollPixels, loop } = settings
         console.log('Got new settings from sync', scrollDuration, scrollPixels)
         if (scrollDuration && scrollPixels) {
           console.log('Setting defaults')
@@ -128,22 +170,37 @@ const FormHandler = () => {
           setScrollPixels(scrollPixels)
           setLoop(Boolean(loop))
         }
-      } catch(e) {
+      } catch (e) {
         console.error(e)
       } finally {
         finishedSyncing()
       }
-
     }
   }
-  
-  const stop = () => {
+
+  const sendMessage = async (message: Message, showErrors: boolean = true) => {
     if (globalThis.chrome?.tabs) {
-      chrome.tabs.query({ active: true, currentWindow: true }, ([firstTab]) => {
-        if (firstTab && firstTab.id)
-          chrome.tabs.sendMessage(firstTab.id, { stop: true } as Message)
-      })
+      try {
+        const [firstTab] = await chrome.tabs.query({ active: true, currentWindow: true })
+        if (firstTab && firstTab.id) {
+          try {
+            await chrome.tabs.sendMessage(firstTab.id, message as Message)
+            console.log('Sent to tab: ', firstTab.id)
+          } catch (e) {
+            if (showErrors) setError(ErrorMessages.CANNOT_CONNECT_TO_ACTIVE_TAB)
+          }
+        } else {
+          if (showErrors) setError(ErrorMessages.CANNOT_QUERY_CURRENT_TAB)
+        }
+      } catch (e) {
+        if (showErrors) setError(ErrorMessages.CANNOT_QUERY_CURRENT_TAB)
+        console.error(e)
+      }        
     }
+  }
+
+  const stop = () => {
+    sendMessage({ stop: true } as Message, false)
   }
   useEffect(() => {
     stop()
@@ -152,12 +209,7 @@ const FormHandler = () => {
     })
   }, [])
   const onSubmit = () => {
-    if (globalThis.chrome?.tabs) {
-      chrome.tabs.query({ active: true, currentWindow: true }, ([firstTab]) => {
-        if (firstTab && firstTab.id)
-          chrome.tabs.sendMessage(firstTab.id, { scrollDuration, scrollPixels, loop } as Message)
-      })
-    }
+    sendMessage({ scrollDuration, scrollPixels, loop } as Message)
   }
 
   const saveAsDefault = async () => {
@@ -170,7 +222,7 @@ const FormHandler = () => {
           [settingsKey]: {
             scrollDuration,
             scrollPixels,
-            loop
+            loop,
           } as Settings,
         })
       } catch (e) {
@@ -202,7 +254,14 @@ const FormHandler = () => {
         loop={loop}
         setLoop={setLoop}
       />
-      <span aria-busy={!doneSyncing} className='syncing' style={{opacity: doneOpacity}}>{doneSyncing ? 'Synced!' : 'Syncing...'}</span>
+      <div aria-busy={!doneSyncing} className='syncing' style={{ opacity: doneOpacity }}>
+        {doneSyncing ? 'Synced!' : 'Syncing...'}
+      </div>
+      <div>
+        <TransientMessage done={() => setError('')} value={error} delay={15000} duration={3000} className='error-message'>
+          {error}
+        </TransientMessage>
+      </div>
     </>
   )
 }

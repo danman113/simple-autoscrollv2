@@ -15,6 +15,13 @@ button {
   transition: opacity ease-out 1500ms;
 }
 
+.error-message {
+  color: #b30000;
+  margin-bottom: 4px;
+
+  transition: opacity ease-out 3000ms;
+}
+
 .syncing {
   transition: opacity ease-out 3000ms;
 }
