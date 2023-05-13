@@ -44,7 +44,6 @@ const main = async () => {
     let scrollDuration: number | null = null
     let scrollPixels: number | null = null
     chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-      console.log('received message')
       if (message) {
         isLooping = false
         const { scrollDuration: SD, scrollPixels: SP, loop, stop } = message as Message
