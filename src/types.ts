@@ -6,5 +6,6 @@ export type Settings = {
 
 export type Message = {
   ping?: boolean
-  stop: boolean
+  stop?: boolean
+  pause?: boolean
 } & Settings

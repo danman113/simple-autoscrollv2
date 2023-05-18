@@ -15,6 +15,15 @@
   "icons": {
     "128": "images/icon.png"
   },
+  "commands": {
+    "Toggle Autoscroll": {
+      "description": "Pauses/Resumes Autoscroll on the current page",
+      "suggested_key": {
+        "default": "Alt+J",
+        "mac": "Alt+J"
+      }
+    }
+  },
   "content_scripts": [
     {
       "js": [
@@ -26,6 +35,9 @@
       ]
     }
   ],
+  "background": {
+    "service_worker": "scripts/background.js"
+  },
   "permissions": [
     "storage"
   ]

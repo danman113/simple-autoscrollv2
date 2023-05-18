@@ -10,7 +10,7 @@ export default defineConfig({
     outDir: 'scripts/',
     manifest: false,
     rollupOptions: {
-      input: [resolve(__dirname, 'src/content.ts'), resolve(__dirname, 'index.html')],
+      input: [resolve(__dirname, 'src/content.ts'), resolve(__dirname, 'src/background.ts'), resolve(__dirname, 'index.html')],
       output: {
         entryFileNames: `[name].js`,
         chunkFileNames: `[name].js`,

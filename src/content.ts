@@ -43,25 +43,49 @@ const main = async () => {
     let intCB: number = -1
     let scrollDuration: number | null = null
     let scrollPixels: number | null = null
-    chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+    let scrollLoop: boolean | null = null
+    const stopAutoscroll = () => {
+      clearInterval(intCB)
+      intCB = -1
+    }
+    const startAutoscroll = (scrollDuration: number, scrollPixels: number, loop: boolean) => {
+      if (intCB >= 0) clearInterval(intCB)
+      intCB = setInterval(() => {
+        const elements = [element, document?.body, document?.body?.parentNode].filter(
+          Boolean
+        ) as Element[]
+        for (let element of elements) {
+          const delta = scrollElement(element, scrollPixels!, loop)
+          if (delta) break
+        }
+      }, scrollDuration)
+    }
+
+    const toggleAutoscroll = (
+      scrollDuration: number | null,
+      scrollPixels: number | null,
+      loop: boolean = false
+    ) => {
+      if (intCB >= 0) {
+        stopAutoscroll()
+      } else {
+        if (scrollDuration && scrollPixels) startAutoscroll(scrollDuration, scrollPixels, loop)
+      }
+    }
+
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message) {
         isLooping = false
-        const { scrollDuration: SD, scrollPixels: SP, loop, stop } = message as Message
+        const { scrollDuration: SD, scrollPixels: SP, loop, stop, pause } = message as Message
+        scrollLoop = loop
         if (stop) {
-          clearInterval(intCB)
+          stopAutoscroll()
+        } else if (pause) {
+          toggleAutoscroll(scrollDuration, scrollPixels, scrollLoop)
         } else {
           scrollDuration = SD
           scrollPixels = SP
-          if (intCB >= 0) clearInterval(intCB)
-          intCB = setInterval(() => {
-            const elements = [element, document?.body, document?.body?.parentNode].filter(
-              Boolean
-            ) as Element[]
-            for (let element of elements) {
-              const delta = scrollElement(element, scrollPixels!, loop)
-              if (delta) break
-            }
-          }, scrollDuration)
+          startAutoscroll(SD, SP, loop)
         }
       }
     })

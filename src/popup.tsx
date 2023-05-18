@@ -195,7 +195,7 @@ const FormHandler = () => {
       } catch (e) {
         if (showErrors) setError(ErrorMessages.CANNOT_QUERY_CURRENT_TAB)
         console.error(e)
-      }        
+      }
     }
   }
 
@@ -258,7 +258,13 @@ const FormHandler = () => {
         {doneSyncing ? 'Synced!' : 'Syncing...'}
       </div>
       <div>
-        <TransientMessage done={() => setError('')} value={error} delay={15000} duration={3000} className='error-message'>
+        <TransientMessage
+          done={() => setError('')}
+          value={error}
+          delay={15000}
+          duration={3000}
+          className='error-message'
+        >
           {error}
         </TransientMessage>
       </div>
