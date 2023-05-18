@@ -185,6 +185,7 @@ const FormHandler = () => {
         if (firstTab && firstTab.id) {
           try {
             await chrome.tabs.sendMessage(firstTab.id, message as Message)
+            if (showErrors) setError('')
             console.log('Sent to tab: ', firstTab.id)
           } catch (e) {
             if (showErrors) setError(ErrorMessages.CANNOT_CONNECT_TO_ACTIVE_TAB)
