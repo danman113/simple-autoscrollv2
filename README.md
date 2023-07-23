@@ -7,7 +7,7 @@ Simple Autoscroll uses typescript, and requires compilation before chrome can us
 
 1. Install Node.js and npm (Node Package Manager) on your machine if you haven't already. You can download Node.js from the official website: https://nodejs.org
 
-2. Open a terminal or command prompt and navigate to the root directory of your project.
+2. Open a terminal or command prompt and navigate the `simple-autoscrollv2` directory.
 
 3. Install project dependencies by running the following command:
 
