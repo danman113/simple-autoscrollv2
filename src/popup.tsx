@@ -1,4 +1,5 @@
 import './popup.css'
+import eyedropper from '../images/eyedrop.svg'
 import React, { ReactNode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Settings, Message } from './types'
@@ -61,6 +62,11 @@ const Form = ({
   savedOpacity = 1,
   saveAsDefault,
   submitContent = 'Go',
+  showAdvanced,
+  setShowAdvanced,
+  customElement,
+  setCustomElement,
+  startCapture = () => {},
 }: {
   ScrollSpeed: number
   setScrollSpeed: (speed: number) => void
@@ -74,6 +80,11 @@ const Form = ({
   setLoop: (loop: boolean) => void
   submitContent?: React.ReactNode
   submitClass?: string
+  showAdvanced: boolean
+  setShowAdvanced: (show: boolean) => void
+  customElement: string | null
+  setCustomElement: (str: string | null) => void
+  startCapture: () => void
 }) => (
   <form
     onSubmit={(e) => {
@@ -113,16 +124,46 @@ const Form = ({
         value={String(ScrollSpeed)}
         onChange={(e) => setScrollSpeed(Number(e.target.value))}
       />{' '}
-      miliseconds
+      milliseconds
       <br />
-      <input
-        type='checkbox'
-        name='loop'
-        id='loop'
-        checked={loop}
-        onChange={(e) => setLoop(e.target.checked)}
-      />
-      <label htmlFor='loop'>loop?</label>
+      <a onClick={() => setShowAdvanced(!showAdvanced)}>Advanced {showAdvanced ? '-' : '+'}</a>
+      <div id='advanced' className={showAdvanced ? 'show' : 'hide'}>
+        <input
+          type='checkbox'
+          name='loop'
+          id='loop'
+          checked={loop}
+          onChange={(e) => setLoop(e.target.checked)}
+        />
+        <label htmlFor='loop'>loop?</label>
+        <br />
+        <textarea
+          className='custom-element-textarea'
+          name='custom_element'
+          id='custom_element'
+          placeholder='Custom Element'
+          cols={30}
+          rows={2}
+          onChange={(e) => setCustomElement(e.target.value)}
+        >
+          {customElement}
+        </textarea>
+        <button
+          onClick={(e) => {
+            e.preventDefault()
+            startCapture()
+          }}
+        >
+          Pick Element <img className='eyedropper' src={eyedropper} />
+        </button>
+        <a
+          onClick={() => {
+            chrome.tabs.create({ url: 'chrome://extensions/shortcuts' })
+          }}
+        >
+          Keyboard Shortcuts
+        </a>
+      </div>
     </div>
     {onSubmit && (
       <button type='submit' className={submitClass || ''}>
@@ -146,6 +187,8 @@ const FormHandler = () => {
   const [displaySaved, setDisplaySaved] = useState(false)
   const [doneSyncing, setDoneSyncing] = useState(true)
   const [doneOpacity, setDoneOpacity] = useState(1)
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [customElement, setCustomElement] = useState<string | null>(null)
   const startSyncing = () => {
     setDoneSyncing(false)
     setDoneOpacity(1)
@@ -203,6 +246,7 @@ const FormHandler = () => {
   const stop = () => {
     sendMessage({ stop: true } as Message, false)
   }
+
   useEffect(() => {
     stop()
     fetchSyncedSettings().catch(() => {
@@ -241,6 +285,11 @@ const FormHandler = () => {
     finishedSyncing()
   }
 
+  const startCapture = () => {
+    console.log('Start capture')
+    sendMessage({ capture: true } as Message, true)
+  }
+
   return (
     <>
       <Form
@@ -254,6 +303,11 @@ const FormHandler = () => {
         saveAsDefault={saveAsDefault}
         loop={loop}
         setLoop={setLoop}
+        showAdvanced={showAdvanced}
+        setShowAdvanced={setShowAdvanced}
+        customElement={customElement}
+        setCustomElement={setCustomElement}
+        startCapture={startCapture}
       />
       <div aria-busy={!doneSyncing} className='syncing' style={{ opacity: doneOpacity }}>
         {doneSyncing ? 'Synced!' : 'Syncing...'}

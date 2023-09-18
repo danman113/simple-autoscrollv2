@@ -38,6 +38,75 @@ const scrollElement = (mainElement: Element, amount: number, loop: boolean = fal
   return delta
 }
 
+const isElementScrollable = (element: HTMLElement) =>
+  element.scrollHeight > element.clientHeight || element.scrollWidth > element.clientWidth
+
+const getSelectorFromElement = (element: HTMLElement | null): string[] => {
+  if (!element) return []
+  if (element.tagName === 'body') return ['body']
+  if (element.id) {
+    return ['#' + element.id]
+  }
+  if (element.className) {
+    return [
+      ...getSelectorFromElement(element.parentElement),
+      element.className
+        .split(/\s+/)
+        .filter(s => !s.includes(':')) // Classes can contain ":", which is not a valid query selector
+        .map(s => '.' + s)
+        .join(''),
+    ]
+  }
+
+  // TODO: This isn't quite right
+  let nChildren = 1
+  let sibling = element.previousSibling
+  while (sibling) {
+    nChildren++
+    sibling = sibling.previousSibling
+  }
+  // If there is no classname, we get nth element
+  return [
+    ...getSelectorFromElement(element.parentElement),
+    `:nth-child(${nChildren})`,
+  ]
+}
+
+const overlayClass = 'highlight-overlay-' + Date.now()
+
+// Add the overlay using a pseudo-element
+const style = document.createElement('style')
+style.textContent = `
+  .${overlayClass} {
+    outline: #2980b9 solid 2px !important;
+    transition: background, outline 1s !important;
+    background-color: #3498db !important;
+  }
+`
+
+document.head.appendChild(style)
+
+let customSelector: string | null = null
+let customElement: EventTarget | null = null
+let setup = false
+const startCapture = () => {
+  if (!setup) {
+    document.addEventListener('mouseover', (e) => {
+      e.preventDefault()
+      if (customElement) {
+        ;(customElement as HTMLElement).classList.remove(overlayClass)
+      }
+      customElement = e.target
+      if (customElement) {
+        let selector = getSelectorFromElement(e.target as HTMLElement).join(' > ')
+        let selectorTheSame = e.target == document.querySelector(selector)
+        console.log(selectorTheSame, selector)
+        ;(customElement as HTMLElement).classList.add(overlayClass)
+      }
+    })
+  }
+}
+
 const main = async () => {
   if (globalThis.chrome) {
     let intCB: number = -1
@@ -76,12 +145,22 @@ const main = async () => {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message) {
         isLooping = false
-        const { scrollDuration: SD, scrollPixels: SP, loop, stop, pause } = message as Message
+        const {
+          scrollDuration: SD,
+          scrollPixels: SP,
+          loop,
+          stop,
+          pause,
+          capture,
+        } = message as Message
+        console.log('Got message', message)
         scrollLoop = loop
         if (stop) {
           stopAutoscroll()
         } else if (pause) {
           toggleAutoscroll(scrollDuration, scrollPixels, scrollLoop)
+        } else if (capture) {
+          startCapture()
         } else {
           scrollDuration = SD
           scrollPixels = SP

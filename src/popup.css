@@ -25,3 +25,27 @@ button {
 .syncing {
   transition: opacity ease-out 3000ms;
 }
+
+.show {
+  display: block;
+}
+
+a {
+  color: #0969da;
+  cursor: pointer;
+}
+
+.hide {
+  display: none;
+}
+
+.eyedropper {
+  width: 14px;
+  height: 14px;
+  border: none;
+  cursor: pointer;
+}
+
+.custom-element-textarea {
+  width: 85px;
+}

@@ -8,4 +8,5 @@ export type Message = {
   ping?: boolean
   stop?: boolean
   pause?: boolean
+  capture?: boolean
 } & Settings
